@@ -255,6 +255,37 @@ class BasicAgent(object):
 
         self.set_global_plan(path)
 
+    def get_waypoint_for_targets_min_max(self, in_vehicle):
+        """
+        Takes the target's bounding box min and max and calculates the waypoint for each
+        """
+        target_world_vertices = in_vehicle.bounding_box.get_world_vertices(in_vehicle.get_transform())
+
+        min = in_vehicle.get_location()
+        max = in_vehicle.get_location()
+        
+        for vertex in target_world_vertices:
+            if vertex.x > max.x:
+                max.x = vertex.x
+            if vertex.x < min.x:
+                min.x = vertex.x
+
+            if vertex.y > max.y:
+                max.y = vertex.y
+            if vertex.y < min.y:
+                min.y = vertex.y
+
+            if vertex.z > max.z:
+                max.z = vertex.z
+            if vertex.z < min.z:
+                min.z = vertex.z
+
+
+        target_wpt_min = self._map.get_waypoint(min, lane_type=carla.LaneType.Any)
+        target_wpt_max = self._map.get_waypoint(max, lane_type=carla.LaneType.Any)
+
+        return target_wpt_min, target_wpt_max
+
     def _affected_by_traffic_light(self, lights_list=None, max_distance=None):
         """
         Method to check if there is a red light affecting the vehicle.
@@ -381,7 +412,7 @@ class BasicAgent(object):
             target_transform = target_vehicle.get_transform()
             if target_transform.location.distance(ego_location) > max_distance:
                 continue
-
+            
             target_wpt = self._map.get_waypoint(target_transform.location, lane_type=carla.LaneType.Any)
 
             # General approach for junctions and vehicles invading other lanes due to the offset
@@ -397,12 +428,15 @@ class BasicAgent(object):
 
             # Simplified approach, using only the plan waypoints (similar to TM)
             else:
+                target_wpt_min, target_wpt_max = self.get_waypoint_for_targets_min_max(target_vehicle)
 
-                if target_wpt.road_id != ego_wpt.road_id or target_wpt.lane_id != ego_wpt.lane_id  + lane_offset:
+                if (target_wpt_min.road_id != ego_wpt.road_id or target_wpt_min.lane_id != ego_wpt.lane_id  + lane_offset) and \
+                    (target_wpt_max.road_id != ego_wpt.road_id or target_wpt_max.lane_id != ego_wpt.lane_id  + lane_offset):
                     next_wpt = self._local_planner.get_incoming_waypoint_and_direction(steps=3)[0]
                     if not next_wpt:
                         continue
-                    if target_wpt.road_id != next_wpt.road_id or target_wpt.lane_id != next_wpt.lane_id  + lane_offset:
+                    if (target_wpt_min.road_id != next_wpt.road_id or target_wpt_min.lane_id != next_wpt.lane_id  + lane_offset) and \
+                        (target_wpt_max.road_id != next_wpt.road_id or target_wpt_max.lane_id != next_wpt.lane_id  + lane_offset):
                         continue
 
                 target_forward_vector = target_transform.get_forward_vector()
