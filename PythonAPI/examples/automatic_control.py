@@ -17,6 +17,7 @@ import glob
 import logging
 import math
 import os
+import time
 import numpy.random as random
 import re
 import sys
@@ -163,6 +164,20 @@ class World(object):
             self.destroy()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
             self.modify_vehicle_physics(self.player)
+            
+         # Get the ego vehicle
+        if args.possess_existing_vehicle: 
+          while self.player is None:
+              print("Waiting for the ego vehicle...")
+              time.sleep(1)
+              possible_vehicles = self.world.get_actors().filter('vehicle.*')
+              for vehicle in possible_vehicles:
+                  if vehicle.attributes['role_name'] == args.rolename:
+                      print("Ego vehicle found")
+                      self.player = vehicle
+                      self.modify_vehicle_physics(self.player)
+                      break
+
         while self.player is None:
             if not self.map.get_spawn_points():
                 print('There are no spawn points available in your map/town.')
@@ -832,6 +847,11 @@ def main():
         action='store_true',
         help='Synchronous mode execution')
     argparser.add_argument(
+        '--rolename',
+        metavar='NAME',
+        default='hero',
+        help='role name of ego vehicle to control (default: "hero")')
+    argparser.add_argument(
         '--filter',
         metavar='PATTERN',
         default='vehicle.*',
@@ -861,6 +881,12 @@ def main():
         help='Set seed for repeating executions (default: None)',
         default=None,
         type=int)
+    argparser.add_argument(
+        '--possess_existing_vehicle',
+        action='store_true',
+        help='Waits for an ego vehicle in the simulation and possesses that, instead of spawning a new vehicle to control',
+        default=None)
+
 
     args = argparser.parse_args()
 
