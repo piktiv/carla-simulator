@@ -769,7 +769,9 @@ def game_loop(args):
         # Set the agent destination
         spawn_points = world.map.get_spawn_points()
         destination = random.choice(spawn_points).location
-        # agent.set_destination(destination)
+
+        if args.pick_random_destination:
+            agent.set_destination(destination)
 
         clock = pygame.time.Clock()
 
@@ -891,6 +893,11 @@ def main():
         action='store_true',
         help='Waits for an ego vehicle in the simulation and possesses that, instead of spawning a new vehicle to control',
         default=None)
+    argparser.add_argument(
+        '--pick_random_destination',
+        help='When created will pick a random destination and drive towards it',
+        default=True)
+    
 
 
     args = argparser.parse_args()
