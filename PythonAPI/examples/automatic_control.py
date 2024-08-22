@@ -850,7 +850,9 @@ def create_agent(world, args):
             world.player.set_location(ground_loc.location + carla.Location(z=0.01))
         agent.follow_speed_limits(True)
     elif args.agent == "Behavior":
-        agent = BehaviorAgent(world.player, behavior=args.behavior)
+        opt_dict = {}
+        opt_dict['max_brake'] = 1
+        agent = BehaviorAgent(world.player, behavior=args.behavior, opt_dict=opt_dict)
 
     return agent
 
@@ -901,7 +903,8 @@ def game_loop(args):
 
         if not wait_for_ego_vehicle:
             agent = create_agent(world, args)
-            agent.set_random_spawn_as_destination()
+            if args.pick_random_destination:
+                agent.set_random_spawn_as_destination()
 
         clock = pygame.time.Clock()
 
@@ -922,6 +925,8 @@ def game_loop(args):
                             world.player = vehicle
                             world.setup_sensors()
                             agent = create_agent(world, args)
+                            if args.pick_random_destination:
+                              agent.set_random_spawn_as_destination()
                             wait_for_ego_vehicle = False
                             break
 
@@ -965,7 +970,11 @@ def game_loop(args):
             settings.synchronous_mode = False
             settings.fixed_delta_seconds = None
             world.world.apply_settings(settings)
-            # traffic_manager.set_synchronous_mode(True)
+
+            try:
+                traffic_manager.set_synchronous_mode(True)
+            except:
+                pass
 
             world.destroy()
 
@@ -1060,11 +1069,15 @@ def main():
         type=int,
     )
     argparser.add_argument(
-        "--possess_existing_vehicle",
-        action="store_true",
-        help="Waits for an ego vehicle in the simulation and possesses that, instead of spawning a new vehicle to control",
-        default=None,
-    )
+        '--possess_existing_vehicle',
+        action='store_true',
+        help='Waits for an ego vehicle in the simulation and possesses that, instead of spawning a new vehicle to control',
+        default=None)
+    argparser.add_argument(
+        '--pick_random_destination',
+        help='When created will pick a random destination and drive towards it',
+        default=True)
+    
 
     args = argparser.parse_args()
 

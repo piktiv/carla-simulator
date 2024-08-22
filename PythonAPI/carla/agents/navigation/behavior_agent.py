@@ -61,11 +61,27 @@ class BehaviorAgent(BasicAgent):
         elif behavior == 'aggressive':
             self._behavior = Aggressive()
 
+    def is_vehicle_alive(self):
+        """
+        Tells us if the vehicle is alive or not.
+        This method gets the vehicle from the world instead of our _vehicle object.
+        The _vehicle object state can get stale and by getting it from the world it gets updated.
+        """
+        list_of_ids = [self._vehicle.id]
+        list_of_vehicles = self._world.get_actors(list_of_ids)
+        if len(list_of_vehicles) > 0:
+            return list_of_vehicles[0].is_alive
+        else:
+            return False
+        
     def _update_information(self):
         """
         This method updates the information regarding the ego
         vehicle based on the surrounding world.
         """
+        if not self.is_vehicle_alive():
+            return
+        
         self._speed = get_speed(self._vehicle)
         self._speed_limit = self._vehicle.get_speed_limit()
         self._local_planner.set_speed(self._speed_limit)
