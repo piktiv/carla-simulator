@@ -762,7 +762,9 @@ def game_loop(args):
                 world.player.set_location(ground_loc.location + carla.Location(z=0.01))
             agent.follow_speed_limits(True)
         elif args.agent == "Behavior":
-            agent = BehaviorAgent(world.player, behavior=args.behavior)
+            opt_dict = {}
+            opt_dict['max_brake'] = 1
+            agent = BehaviorAgent(world.player, behavior=args.behavior, opt_dict=opt_dict)
 
         # Set the agent destination
         spawn_points = world.map.get_spawn_points()
@@ -804,7 +806,10 @@ def game_loop(args):
             settings.synchronous_mode = False
             settings.fixed_delta_seconds = None
             world.world.apply_settings(settings)
-            traffic_manager.set_synchronous_mode(True)
+            try:
+                traffic_manager.set_synchronous_mode(True)
+            except:
+                pass
 
             world.destroy()
 
