@@ -10,6 +10,7 @@ It can also make use of the global route planner to follow a specifed route
 """
 
 import carla
+import numpy.random as random
 from shapely.geometry import Polygon
 
 from agents.navigation.local_planner import LocalPlanner, RoadOption
@@ -137,6 +138,11 @@ class BasicAgent(object):
     def get_global_planner(self):
         """Get method for protected member local planner"""
         return self._global_planner
+
+    def set_random_spawn_as_destination(self):
+        spawn_points = self._map.get_spawn_points()
+        destination = random.choice(spawn_points).location
+        self.set_destination(destination)  
 
     def set_destination(self, end_location, start_location=None):
         """
