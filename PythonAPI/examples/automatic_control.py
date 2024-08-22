@@ -769,7 +769,7 @@ def game_loop(args):
         # Set the agent destination
         spawn_points = world.map.get_spawn_points()
         destination = random.choice(spawn_points).location
-        agent.set_destination(destination)
+        # agent.set_destination(destination)
 
         clock = pygame.time.Clock()
 
