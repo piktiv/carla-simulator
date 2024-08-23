@@ -147,7 +147,11 @@ carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometer(
 
 carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscope()
 {
-  check(GetOwner() != nullptr);
+  if (GetOwner() == nullptr)
+  {
+	return carla::geom::Vector3D();
+  }
+
   const FVector AngularVelocity =
       FIMU_GetActorAngularVelocityInRadians(*GetOwner());
 
