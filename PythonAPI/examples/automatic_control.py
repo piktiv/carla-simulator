@@ -57,9 +57,7 @@ except IndexError:
 # -- Add PythonAPI for release mode --------------------------------------------
 # ==============================================================================
 try:
-    sys.path.append(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/carla"
-    )
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/carla")
 except IndexError:
     pass
 
@@ -112,14 +110,10 @@ def get_actor_blueprints(world, filter, generation):
         int_generation = int(generation)
         # Check if generation is in available generations
         if int_generation in [1, 2, 3]:
-            bps = [
-                x for x in bps if int(x.get_attribute("generation")) == int_generation
-            ]
+            bps = [x for x in bps if int(x.get_attribute("generation")) == int_generation]
             return bps
         else:
-            print(
-                "   Warning! Actor Generation is not valid. No actor will be spawned."
-            )
+            print("   Warning! Actor Generation is not valid. No actor will be spawned.")
             return []
     except:
         print("   Warning! Actor Generation is not valid. No actor will be spawned.")
@@ -143,9 +137,7 @@ class World(object):
         except RuntimeError as error:
             print("RuntimeError: {}".format(error))
             print("  The server could not send the OpenDRIVE (.xodr) file:")
-            print(
-                "  Make sure it exists, has the same name of your town, and is correct."
-            )
+            print("  Make sure it exists, has the same name of your town, and is correct.")
             sys.exit(1)
         self.hud = hud
         self.player = None
@@ -173,15 +165,11 @@ class World(object):
                 self.world, self._actor_filter, self._actor_generation
             )
             if not blueprint_list:
-                raise ValueError(
-                    "Couldn't find any blueprints with the specified filters"
-                )
+                raise ValueError("Couldn't find any blueprints with the specified filters")
             blueprint = random.choice(blueprint_list)
             blueprint.set_attribute("role_name", "hero")
             if blueprint.has_attribute("color"):
-                color = random.choice(
-                    blueprint.get_attribute("color").recommended_values
-                )
+                color = random.choice(blueprint.get_attribute("color").recommended_values)
                 blueprint.set_attribute("color", color)
 
             if self.player is not None:
@@ -199,9 +187,7 @@ class World(object):
                     print("Please add some Vehicle Spawn Point to your UE4 scene.")
                     sys.exit(1)
                 spawn_points = self.map.get_spawn_points()
-                spawn_point = (
-                    random.choice(spawn_points) if spawn_points else carla.Transform()
-                )
+                spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
                 self.player = self.world.try_spawn_actor(blueprint, spawn_point)
                 self.modify_vehicle_physics(self.player)
 
@@ -222,11 +208,8 @@ class World(object):
     def setup_sensors(self):
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
-        cam_pos_id = (
-            self.camera_manager.transform_index
-            if self.camera_manager is not None
-            else 0
-        )
+        cam_pos_id = self.camera_manager.transform_index if self.camera_manager is not None else 0
+
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
         self.gnss_sensor = GnssSensor(self.player)
@@ -344,7 +327,7 @@ class HUD(object):
     def tick(self, world, clock):
         """HUD method for every tick"""
         self._notifications.tick(world, clock)
-        if not self._show_info:
+        if not self._show_info or world.player is None:
             return
         transform = world.player.get_transform()
         vel = world.player.get_velocity()
@@ -365,15 +348,12 @@ class HUD(object):
             "",
             "Vehicle: % 20s" % get_actor_display_name(world.player, truncate=20),
             "Map:     % 20s" % world.map.name.split("/")[-1],
-            "Simulation time: % 12s"
-            % datetime.timedelta(seconds=int(self.simulation_time)),
+            "Simulation time: % 12s" % datetime.timedelta(seconds=int(self.simulation_time)),
             "",
             "Speed:   % 15.0f km/h" % (3.6 * math.sqrt(vel.x**2 + vel.y**2 + vel.z**2)),
             "Heading:% 16.0f\N{DEGREE SIGN} % 2s" % (transform.rotation.yaw, heading),
-            "Location:% 20s"
-            % ("(% 5.1f, % 5.1f)" % (transform.location.x, transform.location.y)),
-            "GNSS:% 24s"
-            % ("(% 2.6f, % 3.6f)" % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
+            "Location:% 20s" % ("(% 5.1f, % 5.1f)" % (transform.location.x, transform.location.y)),
+            "GNSS:% 24s" % ("(% 2.6f, % 3.6f)" % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
             "Height:  % 18.0f m" % transform.location.z,
             "",
         ]
@@ -410,9 +390,7 @@ class HUD(object):
                 + (l.z - transform.location.z) ** 2
             )
 
-        vehicles = [
-            (dist(x.get_location()), x) for x in vehicles if x.id != world.player.id
-        ]
+        vehicles = [(dist(x.get_location()), x) for x in vehicles if x.id != world.player.id]
 
         for dist, vehicle in sorted(vehicles):
             if dist > 200.0:
@@ -446,23 +424,16 @@ class HUD(object):
                     break
                 if isinstance(item, list):
                     if len(item) > 1:
-                        points = [
-                            (x + 8, v_offset + 8 + (1 - y) * 30)
-                            for x, y in enumerate(item)
-                        ]
+                        points = [(x + 8, v_offset + 8 + (1 - y) * 30) for x, y in enumerate(item)]
                         pygame.draw.lines(display, (255, 136, 0), False, points, 2)
                     item = None
                     v_offset += 18
                 elif isinstance(item, tuple):
                     if isinstance(item[1], bool):
                         rect = pygame.Rect((bar_h_offset, v_offset + 8), (6, 6))
-                        pygame.draw.rect(
-                            display, (255, 255, 255), rect, 0 if item[1] else 1
-                        )
+                        pygame.draw.rect(display, (255, 255, 255), rect, 0 if item[1] else 1)
                     else:
-                        rect_border = pygame.Rect(
-                            (bar_h_offset, v_offset + 8), (bar_width, 6)
-                        )
+                        rect_border = pygame.Rect((bar_h_offset, v_offset + 8), (bar_width, 6))
                         pygame.draw.rect(display, (255, 255, 255), rect_border, 1)
                         fig = (item[1] - item[2]) / (item[3] - item[2])
                         if item[2] < 0.0:
@@ -471,9 +442,7 @@ class HUD(object):
                                 (6, 6),
                             )
                         else:
-                            rect = pygame.Rect(
-                                (bar_h_offset, v_offset + 8), (fig * bar_width, 6)
-                            )
+                            rect = pygame.Rect((bar_h_offset, v_offset + 8), (fig * bar_width, 6))
                         pygame.draw.rect(display, (255, 255, 255), rect)
                     item = item[0]
                 if item:  # At this point has to be a str.
@@ -568,15 +537,11 @@ class CollisionSensor(object):
         self.hud = hud
         world = self._parent.get_world()
         blueprint = world.get_blueprint_library().find("sensor.other.collision")
-        self.sensor = world.spawn_actor(
-            blueprint, carla.Transform(), attach_to=self._parent
-        )
+        self.sensor = world.spawn_actor(blueprint, carla.Transform(), attach_to=self._parent)
         # We need to pass the lambda a weak reference to
         # self to avoid circular reference.
         weak_self = weakref.ref(self)
-        self.sensor.listen(
-            lambda event: CollisionSensor._on_collision(weak_self, event)
-        )
+        self.sensor.listen(lambda event: CollisionSensor._on_collision(weak_self, event))
 
     def get_collision_history(self):
         """Gets the history of collisions"""
@@ -619,9 +584,7 @@ class LaneInvasionSensor(object):
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
-        self.sensor.listen(
-            lambda event: LaneInvasionSensor._on_invasion(weak_self, event)
-        )
+        self.sensor.listen(lambda event: LaneInvasionSensor._on_invasion(weak_self, event))
 
     @staticmethod
     def _on_invasion(weak_self, event):
@@ -717,9 +680,7 @@ class CameraManager(object):
                 attachment.SpringArmGhost,
             ),
             (
-                carla.Transform(
-                    carla.Location(x=-1.0, y=-1.0 * bound_y, z=0.4 * bound_z)
-                ),
+                carla.Transform(carla.Location(x=-1.0, y=-1.0 * bound_y, z=0.4 * bound_z)),
                 attachment.Rigid,
             ),
         ]
@@ -769,9 +730,7 @@ class CameraManager(object):
         needs_respawn = (
             True
             if self.index is None
-            else (
-                force_respawn or (self.sensors[index][0] != self.sensors[self.index][0])
-            )
+            else (force_respawn or (self.sensors[index][0] != self.sensors[self.index][0]))
         )
         if needs_respawn:
             if self.sensor is not None:
@@ -787,9 +746,7 @@ class CameraManager(object):
             # We need to pass the lambda a weak reference to
             # self to avoid circular reference.
             weak_self = weakref.ref(self)
-            self.sensor.listen(
-                lambda image: CameraManager._parse_image(weak_self, image)
-            )
+            self.sensor.listen(lambda image: CameraManager._parse_image(weak_self, image))
         if notify:
             self.hud.notification(self.sensors[index][2])
         self.index = index
@@ -819,9 +776,7 @@ class CameraManager(object):
             lidar_data = np.array(points[:, :2])
             lidar_data *= min(self.hud.dim) / 100.0
             lidar_data += (0.5 * self.hud.dim[0], 0.5 * self.hud.dim[1])
-            lidar_data = np.fabs(
-                lidar_data
-            )  # pylint: disable=assignment-from-no-return
+            lidar_data = np.fabs(lidar_data)  # pylint: disable=assignment-from-no-return
             lidar_data = lidar_data.astype(np.int32)
             lidar_data = np.reshape(lidar_data, (-1, 2))
             lidar_img_size = (self.hud.dim[0], self.hud.dim[1], 3)
@@ -851,7 +806,7 @@ def create_agent(world, args):
         agent.follow_speed_limits(True)
     elif args.agent == "Behavior":
         opt_dict = {}
-        opt_dict['max_brake'] = 1
+        opt_dict["max_brake"] = 1
         agent = BehaviorAgent(world.player, behavior=args.behavior, opt_dict=opt_dict)
 
     return agent
@@ -911,26 +866,27 @@ def game_loop(args):
         while True:
             clock.tick()
 
-            if wait_for_ego_vehicle and next_poll <= pygame.time.get_ticks():
-                next_poll = pygame.time.get_ticks() + 1000
-                print("Waiting for ego vehicle...")
-                vehicle_list = world.world.get_actors().filter("vehicle.*")
-                if len(vehicle_list) > 0:
-                    world.world = client.get_world()
-                    world.map = world.world.get_map()
+            if wait_for_ego_vehicle:
+                if next_poll <= pygame.time.get_ticks():
+                    next_poll = pygame.time.get_ticks() + 1000
+                    print("Waiting for ego vehicle...")
                     vehicle_list = world.world.get_actors().filter("vehicle.*")
-                    for vehicle in vehicle_list:
-                        if vehicle.attributes["role_name"] == args.rolename:
-                            print("Ego vehicle found")
-                            world.player = vehicle
-                            world.setup_sensors()
-                            agent = create_agent(world, args)
-                            if args.pick_random_destination:
-                              agent.set_random_spawn_as_destination()
-                            wait_for_ego_vehicle = False
-                            break
+                    if len(vehicle_list) > 0:
+                        world.world = client.get_world()
+                        world.map = world.world.get_map()
+                        vehicle_list = world.world.get_actors().filter("vehicle.*")
+                        for vehicle in vehicle_list:
+                            if vehicle.attributes["role_name"] == args.rolename:
+                                print("Ego vehicle found")
+                                world.player = vehicle
+                                world.setup_sensors()
+                                agent = create_agent(world, args)
+                                if args.pick_random_destination:
+                                    agent.set_random_spawn_as_destination()
+                                wait_for_ego_vehicle = False
+                                break
 
-            if not world.player.is_active:
+            elif not world.player.is_active:
                 if args.possess_existing_vehicle:
                     wait_for_ego_vehicle = True
                 else:
@@ -941,13 +897,15 @@ def game_loop(args):
                     world.world.tick()
                 else:
                     world.world.wait_for_tick()
-                    
+
             if controller.parse_events():
                 return
 
             world.tick(clock)
-            world.render(display)
-            pygame.display.flip()
+            
+            if world.player is not None: 
+                world.render(display)
+                pygame.display.flip()
 
             if not wait_for_ego_vehicle and agent.done():
                 if args.loop:
@@ -962,7 +920,9 @@ def game_loop(args):
                 control = agent.run_step()
                 control.manual_gear_shift = False
                 world.player.apply_control(control)
-
+    except BaseException as exc:
+        print("error during gameloop: {}".format(exc))
+        raise
     finally:
 
         if world is not None:
@@ -1017,9 +977,7 @@ def main():
         default="1280x720",
         help="Window resolution (default: 1280x720)",
     )
-    argparser.add_argument(
-        "--sync", action="store_true", help="Synchronous mode execution"
-    )
+    argparser.add_argument("--sync", action="store_true", help="Synchronous mode execution")
     argparser.add_argument(
         "--rolename",
         metavar="NAME",
@@ -1069,15 +1027,16 @@ def main():
         type=int,
     )
     argparser.add_argument(
-        '--possess_existing_vehicle',
-        action='store_true',
-        help='Waits for an ego vehicle in the simulation and possesses that, instead of spawning a new vehicle to control',
-        default=None)
+        "--possess_existing_vehicle",
+        action="store_true",
+        help="Waits for an ego vehicle in the simulation and possesses that, instead of spawning a new vehicle to control",
+        default=None,
+    )
     argparser.add_argument(
-        '--pick_random_destination',
-        help='When created will pick a random destination and drive towards it',
-        default=True)
-    
+        "--pick_random_destination",
+        help="When created will pick a random destination and drive towards it",
+        default=False,
+    )
 
     args = argparser.parse_args()
 
