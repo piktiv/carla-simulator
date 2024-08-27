@@ -79,7 +79,7 @@ class BehaviorAgent(BasicAgent):
         This method updates the information regarding the ego
         vehicle based on the surrounding world.
         """
-        if not self.is_vehicle_alive():
+        if not self.is_vehicle_alive() or not self._vehicle.is_active:
             return
         
         self._speed = get_speed(self._vehicle)
@@ -303,7 +303,7 @@ class BehaviorAgent(BasicAgent):
                 control = self.car_following_manager(vehicle, distance)
 
         # 3: Intersection behavior
-        elif self._incoming_waypoint.is_junction and (self._incoming_direction in [RoadOption.LEFT, RoadOption.RIGHT]):
+        elif self._incoming_waypoint and self._incoming_waypoint.is_junction and (self._incoming_direction in [RoadOption.LEFT, RoadOption.RIGHT]):
             target_speed = min([
                 self._behavior.max_speed,
                 self._speed_limit - 5])

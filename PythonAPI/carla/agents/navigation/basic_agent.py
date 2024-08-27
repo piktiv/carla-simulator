@@ -142,7 +142,20 @@ class BasicAgent(object):
     def set_random_spawn_as_destination(self):
         spawn_points = self._map.get_spawn_points()
         destination = random.choice(spawn_points).location
-        self.set_destination(destination)  
+        self.set_destination(destination)
+
+    def set_goal_as_destination(self):
+        print("Using goal destination")
+        possible_goals = self._world.get_actors().filter('util.*')
+        goal = None
+        for possible_goal in possible_goals:
+            if possible_goal.attributes['role_name'] == "goal":
+                goal = possible_goal
+                break
+        if goal:
+            self.set_destination(goal.get_location())
+        else:
+            print("Failed to find a goal")
 
     def set_destination(self, end_location, start_location=None):
         """

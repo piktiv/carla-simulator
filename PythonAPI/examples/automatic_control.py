@@ -340,23 +340,26 @@ class HUD(object):
         collision = [colhist[x + self.frame - 200] for x in range(0, 200)]
         max_col = max(1.0, max(collision))
         collision = [x / max_col for x in collision]
-        vehicles = world.world.get_actors().filter("vehicle.*")
+        vehicles = world.world.get_actors().filter('vehicle.*')
+        target_wpt = world.world.get_map().get_waypoint(transform.location, lane_type=carla.LaneType.Any)
 
         self._info_text = [
-            "Server:  % 16.0f FPS" % self.server_fps,
-            "Client:  % 16.0f FPS" % clock.get_fps(),
-            "",
-            "Vehicle: % 20s" % get_actor_display_name(world.player, truncate=20),
-            "Map:     % 20s" % world.map.name.split("/")[-1],
-            "Simulation time: % 12s" % datetime.timedelta(seconds=int(self.simulation_time)),
-            "",
-            "Speed:   % 15.0f km/h" % (3.6 * math.sqrt(vel.x**2 + vel.y**2 + vel.z**2)),
-            "Heading:% 16.0f\N{DEGREE SIGN} % 2s" % (transform.rotation.yaw, heading),
-            "Location:% 20s" % ("(% 5.1f, % 5.1f)" % (transform.location.x, transform.location.y)),
-            "GNSS:% 24s" % ("(% 2.6f, % 3.6f)" % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
-            "Height:  % 18.0f m" % transform.location.z,
-            "",
-        ]
+
+            'Server:  % 16.0f FPS' % self.server_fps,
+            'Client:  % 16.0f FPS' % clock.get_fps(),
+            '',
+            'Vehicle: % 20s' % get_actor_display_name(world.player, truncate=20),
+            'Map:     % 20s' % world.map.name.split('/')[-1],
+            'Simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
+            '',
+            'Speed:   % 15.0f km/h' % (3.6 * math.sqrt(vel.x**2 + vel.y**2 + vel.z**2)),
+            u'Heading:% 16.0f\N{DEGREE SIGN} % 2s' % (transform.rotation.yaw, heading),
+            'Location:% 20s' % ('(% 5.1f, % 5.1f)' % (transform.location.x, transform.location.y)),
+            'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
+            'Height:  % 18.0f m' % transform.location.z,
+            f'RoadId: {target_wpt.road_id} s: {target_wpt.s}',
+            f'LaneId: {target_wpt.lane_id}'
+            '']
         if isinstance(control, carla.VehicleControl):
             self._info_text += [
                 ("Throttle:", control.throttle, 0.0, 1.0),
@@ -860,7 +863,9 @@ def game_loop(args):
             agent = create_agent(world, args)
             if args.pick_random_destination:
                 agent.set_random_spawn_as_destination()
-
+            elif args.use_goal:
+                agent.set_goal_as_destination()
+                
         clock = pygame.time.Clock()
 
         while True:
@@ -871,6 +876,7 @@ def game_loop(args):
                     next_poll = pygame.time.get_ticks() + 1000
                     print("Waiting for ego vehicle...")
                     vehicle_list = world.world.get_actors().filter("vehicle.*")
+
                     if len(vehicle_list) > 0:
                         world.world = client.get_world()
                         world.map = world.world.get_map()
@@ -883,6 +889,8 @@ def game_loop(args):
                                 agent = create_agent(world, args)
                                 if args.pick_random_destination:
                                     agent.set_random_spawn_as_destination()
+                                elif args.use_goal:
+                                    agent.set_goal_as_destination()
                                 wait_for_ego_vehicle = False
                                 break
 
@@ -1027,16 +1035,13 @@ def main():
         type=int,
     )
     argparser.add_argument(
-        "--possess_existing_vehicle",
-        action="store_true",
-        help="Waits for an ego vehicle in the simulation and possesses that, instead of spawning a new vehicle to control",
-        default=None,
-    )
-    argparser.add_argument(
-        "--pick_random_destination",
-        help="When created will pick a random destination and drive towards it",
-        default=False,
-    )
+        '--possess_existing_vehicle',
+        action='store_true',
+        help='Waits for an ego vehicle in the simulation and possesses that, instead of spawning a new vehicle to control',
+        default=None)
+    
+    argparser.add_argument('--pick_random_destination', action='store_true', help='When created will pick a random destination and drive towards it')
+    argparser.add_argument('--use_goal', action='store_true', help='When created will look for a util.* actor with the role_name goal and drive towards it')
 
     args = argparser.parse_args()
 
